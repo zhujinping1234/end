@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite App</title>
+  </head>
+
+  <body>
+    <div id="app"></div>
+    <!-- <script type="module" src="/src/main.ts"></script> -->
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+  <script type="module" src="/src/utils/UuidCreator.test.js"></script>
+  <!--用来做UUID生成器的测试-->
+
+  <!-- 解决引入node-sql-parser的报错：ReferenceError: global is not defined -->
+  <script>
+    global = globalThis
+  </script>
+  <script>
+    var indx = '' // 建立联系的子页面下标
+    var weCode // 所有子页面
+    var wecodeWindow //  建立联系的子页面
+    window.addEventListener(
+      'message',
+      function (e) {
+        if (e.data.type == 'pagelocal') {
+          // console.log(e.data)
+        }
+        // ===========调用遍历函数===========
+        const received = transDimension(window)
+        // =================================
+        // console.log(received)
+        // console.log(window)
+        // TODO 这里的判断值需要完善
+        if (isString(e.data)) {
+          // ====================通过for循环确定通信的子页面================
+          //TODO 单独抽取成一个函数
+          for (let i = 0; i < received.length; i++) {
+            let fra = received[i]
+            fra.postMessage({ type: 'fixindex', msg: i }, '*')
+            indx = i
+            //TODO 为什么加上break就执行不了后面的代码？
+            // break;
+          }
+          // =======================在确定了下标后传回local=================
+          wecodeWindow = received[indx]
+          wecodeWindow.postMessage(
+            {
+              type: 'pagelocal',
+              msg: JSON.stringify(window.localStorage.getItem('vitejs-vite-jcy7tb'))
+            },
+            '*'
+          )
+        }
+      },
+      false
+    )
+
+    function transDimension(winobject) {
+      let rearray = []
+      if (winobject.frames && winobject.frames.length) {
+        for (let i = 0; i < winobject.length; i++) {
+          rearray.push(winobject.frames[i])
+          rearray.push(...transDimension(winobject.frames[i]))
+        }
+      }
+      return rearray
+    }
+
+    // function findIndex() {
+    //   wecodeWindow.postMessage({ type: 'fixindex', msg: indx }, '*')
+    // }
+
+    function isString(str) {
+      return typeof str == 'string' && str.constructor == String
+    }
+  </script>
+</html>
